@@ -1,0 +1,25 @@
+## Interface: 110100
+## Title: Arena Communication
+## Notes: A simple addon that allows you to communicate with your teammates in arena. Click auto generated button from arena 1-3 opponents class and spec to notify your target.
+## Version: 0.1
+## Author: HexNeo
+## X-License: MIT
+## X-Curse-Project-ID: 506378
+## DefaultState: enabled
+## SavedVariables: settings
+## OptionalDeps: Ace3
+## IconTexture: Interface\Icons\Spell_Holy_PainSupression
+## Category-enUS: Chat
+## Category-deDE: Chat
+## Category-esES: Chat
+## Category-esMX: Chat
+## Category-frFR: Discussion
+## Category-itIT: Chat
+## Category-koKR: 대화
+## Category-ptBR: Bate-papo
+## Category-ruRU: Чат
+## Category-zhCN: 聊天
+## Category-zhTW: 對話
+
+embeds.xml
+ArenaComm.lua
