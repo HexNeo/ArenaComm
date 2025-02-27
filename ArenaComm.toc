@@ -4,7 +4,7 @@
 ## Version: 0.1
 ## Author: HexNeo
 ## X-License: MIT
-## X-Curse-Project-ID: 506378
+## X-Curse-Project-ID: 1209459
 ## DefaultState: enabled
 ## SavedVariables: settings
 ## OptionalDeps: Ace3
