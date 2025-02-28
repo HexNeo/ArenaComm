@@ -6,7 +6,7 @@ You can use left, right, middle mouse clicks for chat messages.
 
 Right click settings icon to move the frame.
 
-![Screenshot](http://i.imgur.com/ngS3fc9.jpg)
+![Screenshot](https://github.com/HexNeo/ArenaComm/blob/main/screenshots/1.png)
 
 ## Support arena and solo-shuffle
 
