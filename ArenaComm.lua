@@ -7,8 +7,11 @@ local unit_frames = {};
 
 local myTimer;
 
-local settingsVisible = false;
+-- local settingsVisible = false;
 local frameSettings;
+local frameSettingsVisible = false;
+local mooving = false;
+
 
 local specs = {
     [62] = { specID = 62, specName = "Arcane", specNameRu = "Тайная магия", class = "MAGE" },
@@ -68,16 +71,42 @@ function ArenaComm:OnInitialize()
 end
 
 function ArenaComm:OnEnable()
+	if not settings then
+		settings = {};
+	end
+
+	-- init settings
 	if settings then
 		if not settings.messages then
 			settings.messages = { left = "target?", right = "ok", middle = "some target or random bullshit go?"}
 		end
+
+		if not settings.bpoint or not isString(settings.bpoint) then
+			settings.bpoint = "LEFT";
+		end
+
+		if not settings.brelativeTo or not isString(settings.brelativeTo) then
+			settings.brelativeTo = "UIParent";
+		end
+
+		if not settings.brelativePoint or not isString(settings.brelativePoint) then
+			settings.brelativePoint = "LEFT";
+		end
+
+		if not settings.bxOfs or not isNumber(settings.bxOfs) then
+			settings.bxOfs = 320;
+		end
+
+		if not settings.byOfs or not isNumber(settings.byOfs) then
+			settings.byOfs = 200;
+		end
 	end
+
 	-- print("ArenaComm:OnEnable");
 	main_frame.frame = CreateFrame("Frame", "MainFrame", UIParent);
 	main_frame.frame:SetFrameStrata("BACKGROUND");
 	main_frame.frame:SetSize(260, 64);
-	if (settings.bxOfs and settings.byOfs) then
+	if (settings and settings.bxOfs and settings.byOfs) then
 		main_frame.frame:SetPoint(settings.bpoint, settings.brelativeTo, settings.brelativePoint, settings.bxOfs, settings.byOfs);
 	else
 		main_frame.frame:SetPoint("LEFT", UIParent, "LEFT", 320, 200);
@@ -141,40 +170,104 @@ function ArenaComm:OnEnable()
 		end
 	);
 
+	-- Set the OnEnter script to show the tooltip
+	main_frame.icon_quetion:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText("Messages", 1, 1, 1)
+		GameTooltip:AddLine("Left click message: " .. settings.messages.left, 1, 1, 1, true)
+		GameTooltip:AddLine("Right click message: " .. settings.messages.right, 1, 1, 1, true)
+		GameTooltip:AddLine("Middle click message: " .. settings.messages.middle, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+
+	-- Set the OnLeave script to hide the tooltip
+	main_frame.icon_quetion:SetScript("OnLeave", function(self)
+		GameTooltip:Hide()
+	end)
+
+
+
 	for i = 1, 3 do
 		local unit = "arena" .. i
 		CreateUnitFrameN(i, unit);
 	end
 
-		-- INV_Misc_Gear_05
-	-- INV_Misc_Gear_04
-	-- INV_Misc_NoteFolded2a
-	-- INV_Misc_ScrewDriver_02
-	-- INV_Misc_ScrewDriver_01
-	-- Icon_PetFamily_Mechanical
-	-- MISC_RnRWrenchButtonLeft
-	-- Pet_Type_Mechanical
-	-- Ability_DualWield
-	-- Achievement_Arena_2v2_2
 	main_frame.icon_settings = CreateFrame("Button", "ClassIcon", main_frame.frame);
 	main_frame.icon_settings:SetFrameStrata("BACKGROUND");
 	main_frame.icon_settings:SetPoint("LEFT", main_frame.frame, 256, 0);
 	main_frame.icon_settings:SetSize(64, 64);
 	main_frame.icon_settings:SetNormalTexture("Interface\\ICONS\\Icon_PetFamily_Mechanical");
-	main_frame.icon_settings:RegisterForClicks("AnyUp"); -- , "AnyDown"
+	main_frame.icon_settings:RegisterForClicks("AnyUp", "AnyDown"); -- 
 	main_frame.icon_settings:SetScript("OnClick", 
 		function (self, button, down)
-			print(self, button, down);
-			CreateSettingsFrame();
+			-- print(self, button, down);
+			
+			if button == "LeftButton" then
+				if not frameSettingsVisible then
+					CreateSettingsFrame();
+				end
+			elseif button == "MiddleButton" then
+				
+			else
+				if mooving and not down then
+					mooving = false;
+					main_frame.frame:StopMovingOrSizing();
+					local p, rTo, rP, xO, yO = main_frame.frame:GetPoint();
+					settings.bpoint = p;
+					settings.brelativeTo = rTo;
+					settings.brelativePoint = rP;
+					settings.bxOfs = xO;
+					settings.byOfs = yO;
+				elseif down then
+					mooving = true;
+					main_frame.frame:StartMoving();
+				end
+			end
 		end
 	);
+
+	-- Set the OnEnter script to show the tooltip
+	main_frame.icon_settings:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText("Settings", 1, 1, 1)
+		GameTooltip:AddLine("Click to open settings.", 1, 1, 1, true)
+		GameTooltip:AddLine("Right click to move frame.", 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+
+	-- Set the OnLeave script to hide the tooltip
+	main_frame.icon_settings:SetScript("OnLeave", function(self)
+		GameTooltip:Hide()
+	end)
+
+	-- main_frame.icon_settings:SetScript("OnDragStart", main_frame.frame.StartMoving);
+	-- main_frame.icon_settings:SetScript("OnDragStop", 
+	-- 	function(self) 
+	-- 		self:StopMovingOrSizing();
+
+	-- 		local p, rTo, rP, xO, yO = self:GetPoint();
+	-- 		settings.bpoint = p;
+	-- 		settings.brelativeTo = rTo;
+	-- 		settings.brelativePoint = rP;
+	-- 		settings.bxOfs = xO;
+	-- 		settings.byOfs = yO;
+	-- 	end
+	-- );
 
 	myTimer = C_Timer.NewTicker(2, function(self) ArenaComm:Refresh() end);
 
 	ArenaComm:PrintMessage("|cffcccccc ArenaComm |r : |cff37ff37Initialized!|r");
 end
 
-local function capitalize(str)
+function isNumber(value)
+    return type(value) == "number"
+end
+
+function isString(value)
+    return type(value) == "string"
+end
+
+function capitalize(str)
 	if not str then return nil end
     return str:sub(1, 1):upper() .. str:sub(2):lower()
 end
@@ -259,7 +352,7 @@ function CreateUnitFrameN(i, unit)
 			unit_frames[i].button:SetScript("OnClick", 
 				function(self, button, down) 
 					if button == "LeftButton" then
-						SendChatMessage("target " .. capitalize(class) .. specText .. "", "SAY", "Common");
+						SendChatMessage("go " .. capitalize(class) .. specText .. "", "SAY", "Common");
 					elseif button == "MiddleButton" then
 						SendChatMessage("target " .. capitalize(class) .. specText .. "?", "SAY", "Common");
 					else
@@ -267,8 +360,35 @@ function CreateUnitFrameN(i, unit)
 					end
 				end
 			);
+
+			-- Set the OnEnter script to show the tooltip
+			unit_frames[i].button:SetScript("OnEnter", function(self)
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				GameTooltip:SetText("Messages", 1, 1, 1)
+				GameTooltip:AddLine("Left click message: go " .. capitalize(class) .. specText, 1, 1, 1)
+				GameTooltip:AddLine("Right click message: cc " .. capitalize(class) .. specText .. "", 1, 1, 1, true)
+				GameTooltip:AddLine("Middle click message: target " .. capitalize(class) .. specText .. "?", 1, 1, 1, true)
+				GameTooltip:Show()
+			end)
+
+			-- Set the OnLeave script to hide the tooltip
+			unit_frames[i].button:SetScript("OnLeave", function(self)
+				GameTooltip:Hide()
+			end)
 		else
 			unit_frames[i].button:SetNormalTexture("Interface\\Icons\\INV_Misc_QuestionMark");
+
+			-- Set the OnEnter script to show the tooltip
+			unit_frames[i].button:SetScript("OnEnter", function(self)
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				GameTooltip:SetText("no on click messages loaded, enter arena and them will be loaded automatically", 1, 1, 1)
+				GameTooltip:Show()
+			end)
+
+			-- Set the OnLeave script to hide the tooltip
+			unit_frames[i].button:SetScript("OnLeave", function(self)
+				GameTooltip:Hide()
+			end)
 		end
 	elseif unit_frames[i] and specID and (not unit_frames[i].data or unit_frames[i].data.specID ~= specID) then
 		-- print("Updating frame " .. i);
@@ -285,7 +405,7 @@ function CreateUnitFrameN(i, unit)
 			unit_frames[i].button:SetScript("OnClick", 
 				function(self, button, down) 
 					if button == "LeftButton" then
-						SendChatMessage("target " .. capitalize(class) .. specText .. "", "SAY", "Common");
+						SendChatMessage("go " .. capitalize(class) .. specText .. "", "SAY", "Common");
 					elseif button == "MiddleButton" then
 						SendChatMessage("target " .. capitalize(class) .. specText .. "?", "SAY", "Common");
 					else
@@ -293,6 +413,21 @@ function CreateUnitFrameN(i, unit)
 					end
 				end
 			);
+
+			-- Set the OnEnter script to show the tooltip
+			unit_frames[i].button:SetScript("OnEnter", function(self)
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				GameTooltip:SetText("Messages", 1, 1, 1)
+				GameTooltip:AddLine("Left click message: go " .. capitalize(class) .. specText, 1, 1, 1)
+				GameTooltip:AddLine("Right click message: cc " .. capitalize(class) .. specText .. "", 1, 1, 1, true)
+				GameTooltip:AddLine("Middle click message: target " .. capitalize(class) .. specText .. "?", 1, 1, 1, true)
+				GameTooltip:Show()
+			end)
+
+			-- Set the OnLeave script to hide the tooltip
+			unit_frames[i].button:SetScript("OnLeave", function(self)
+				GameTooltip:Hide()
+			end)
 		end
 	end
 
@@ -319,15 +454,15 @@ function GetArenaUnitSpec(unit)
     return nil
 end
 
-
 function CreateSettingsFrame()
+	frameSettingsVisible = true;
 	local title = "Settings for Arena Communication";
-	local statusText = "Settings";
+	local statusText = "Right click settings icon to move the frame";
 
 	frameSettings = AceGUI:Create("Frame")
 	frameSettings:SetTitle(title)
 	frameSettings:SetStatusText(statusText)
-	frameSettings:SetCallback("OnClose", function(widget) AceGUI:Release(widget); settingsVisible = false; end)
+	frameSettings:SetCallback("OnClose", function(widget) AceGUI:Release(widget); frameSettingsVisible = false; end)
 	frameSettings:SetLayout("Flow")
 
 	local boxButtonSayLeft = AceGUI:Create("EditBox")
