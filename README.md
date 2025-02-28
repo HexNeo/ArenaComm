@@ -16,7 +16,7 @@ Right click settings icon to move the frame.
 
 - button for "target?", "ok", "random bulshit go!"
 - 3 buttons for arena 1-3 spec and class texts
-- setting for set custom texts
+- settings for set custom texts
 
 NB! right click setting button to move frame
 
